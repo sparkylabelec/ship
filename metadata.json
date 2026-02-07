@@ -1,0 +1,7 @@
+{
+  "name": " Phase 8 Marine Resource & Crew Manager - 출발도착 알람",
+  "description": "A comprehensive system for managing ship capacities, crew roles, and resource allocation to ensure safe and efficient maritime operations.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}
