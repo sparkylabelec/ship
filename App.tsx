@@ -1,14 +1,14 @@
 
 import React, { useState, useEffect } from 'react';
-import Layout from './components/Layout';
-import Dashboard from './components/Dashboard';
-import UserManagement from './components/UserManagement';
-import ShipManagement from './components/ShipManagement';
-import OperationEntry from './components/OperationEntry';
-import OperationLogList from './components/OperationLogList';
-import TelegramSettings from './components/TelegramSettings';
-import { View, User, Ship, UserRole, OperationLog, TelegramConfig } from './types';
-import { INITIAL_SHIPS, INITIAL_USERS, INITIAL_LOGS } from './constants';
+import Layout from './components/Layout.tsx';
+import Dashboard from './components/Dashboard.tsx';
+import UserManagement from './components/UserManagement.tsx';
+import ShipManagement from './components/ShipManagement.tsx';
+import OperationEntry from './components/OperationEntry.tsx';
+import OperationLogList from './components/OperationLogList.tsx';
+import TelegramSettings from './components/TelegramSettings.tsx';
+import { View, User, Ship, UserRole, OperationLog, TelegramConfig } from './types.ts';
+import { INITIAL_SHIPS, INITIAL_USERS, INITIAL_LOGS } from './constants.tsx';
 import { Ship as ShipIcon, UserCircle, LogIn } from 'lucide-react';
 
 const App: React.FC = () => {
