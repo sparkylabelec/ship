@@ -4,7 +4,7 @@ import { Ship, User, UserRole, OperationLog, TelegramConfig } from '../types.ts'
 import { 
   Anchor, Users, Fuel, Save, CheckCircle2, 
   Navigation, AlertTriangle, X, 
-  Timer, Check, Send, Clock, ChevronDown, MoveRight
+  Timer, Check, Send, Clock, ChevronDown, MoveRight, MapPinned
 } from 'lucide-react';
 
 interface OperationEntryProps {
@@ -16,7 +16,6 @@ interface OperationEntryProps {
   editingLog?: OperationLog | null;
 }
 
-// OperationEntry component implementation with default export to resolve import error in App.tsx
 const OperationEntry: React.FC<OperationEntryProps> = ({ 
   ships, 
   users, 
@@ -27,6 +26,7 @@ const OperationEntry: React.FC<OperationEntryProps> = ({
 }) => {
   const [formData, setFormData] = useState<Partial<OperationLog>>({
     shipName: currentUser.assignedShip || '',
+    operationCourse: '',
     captainName: currentUser.name,
     chiefEngineer: '',
     crewMembers: [],
@@ -56,6 +56,7 @@ const OperationEntry: React.FC<OperationEntryProps> = ({
     const newLog: OperationLog = {
       id: editingLog?.id || `log_${Date.now()}`,
       shipName: formData.shipName!,
+      operationCourse: formData.operationCourse || '미선택',
       captainName: formData.captainName!,
       departureTime: formData.departureTime!,
       arrivalTime: formData.arrivalTime || '',
@@ -90,20 +91,41 @@ const OperationEntry: React.FC<OperationEntryProps> = ({
 
       <div className="bg-white border border-slate-200 rounded-[40px] p-8 md:p-12 shadow-sm space-y-10">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
-          <div className="space-y-3">
-            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 flex items-center gap-2">
-              <Anchor className="w-3.5 h-3.5 text-sky-600" /> 선박 선택
-            </label>
-            <div className="relative">
-              <select 
-                value={formData.shipName}
-                onChange={(e) => setFormData({...formData, shipName: e.target.value})}
-                className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl p-4 text-sm font-bold text-slate-900 outline-none focus:border-sky-600/20 focus:bg-white transition-all appearance-none cursor-pointer"
-              >
-                <option value="">운항 선박을 선택하세요</option>
-                {ships.map(s => <option key={s.id} value={s.name}>{s.name}</option>)}
-              </select>
-              <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-300 pointer-events-none" />
+          {/* 선박 및 코스 선택 영역 */}
+          <div className="space-y-6">
+            <div className="space-y-3">
+              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 flex items-center gap-2">
+                <Anchor className="w-3.5 h-3.5 text-sky-600" /> 선박 선택
+              </label>
+              <div className="relative">
+                <select 
+                  value={formData.shipName}
+                  onChange={(e) => setFormData({...formData, shipName: e.target.value})}
+                  className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl p-4 text-sm font-bold text-slate-900 outline-none focus:border-sky-600/20 focus:bg-white transition-all appearance-none cursor-pointer"
+                >
+                  <option value="">운항 선박을 선택하세요</option>
+                  {ships.map(s => <option key={s.id} value={s.name}>{s.name}</option>)}
+                </select>
+                <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-300 pointer-events-none" />
+              </div>
+            </div>
+
+            <div className="space-y-3">
+              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 flex items-center gap-2">
+                <MapPinned className="w-3.5 h-3.5 text-sky-600" /> 운항 코스
+              </label>
+              <div className="relative">
+                <select 
+                  value={formData.operationCourse}
+                  onChange={(e) => setFormData({...formData, operationCourse: e.target.value})}
+                  className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl p-4 text-sm font-bold text-slate-900 outline-none focus:border-sky-600/20 focus:bg-white transition-all appearance-none cursor-pointer"
+                >
+                  <option value="">운항 코스를 선택하세요</option>
+                  <option value="가평나루 → 남이나루">1. 가평나루 → 남이나루</option>
+                  <option value="남이나루 → 가평나루">2. 남이나루 → 가평나루</option>
+                </select>
+                <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-300 pointer-events-none" />
+              </div>
             </div>
           </div>
 
@@ -111,24 +133,29 @@ const OperationEntry: React.FC<OperationEntryProps> = ({
             <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 flex items-center gap-2">
               <Timer className="w-3.5 h-3.5 text-sky-600" /> 운항 시간 설정
             </label>
-            <div className="flex items-center gap-3">
-              <div className="relative flex-1">
-                <input 
-                  type="time" 
-                  value={formData.departureTime}
-                  onChange={(e) => setFormData({...formData, departureTime: e.target.value})}
-                  className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl p-4 text-sm font-bold text-slate-900 outline-none focus:border-sky-600/20 focus:bg-white transition-all" 
-                />
+            <div className="flex flex-col gap-4">
+              <div className="flex items-center gap-3">
+                <div className="relative flex-1">
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-[10px] font-bold text-slate-400 uppercase">출발</span>
+                  <input 
+                    type="time" 
+                    value={formData.departureTime}
+                    onChange={(e) => setFormData({...formData, departureTime: e.target.value})}
+                    className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl p-4 pl-12 text-sm font-bold text-slate-900 outline-none focus:border-sky-600/20 focus:bg-white transition-all" 
+                  />
+                </div>
+                <MoveRight className="w-4 h-4 text-slate-300" />
+                <div className="relative flex-1">
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-[10px] font-bold text-slate-400 uppercase">도착</span>
+                  <input 
+                    type="time" 
+                    value={formData.arrivalTime}
+                    onChange={(e) => setFormData({...formData, arrivalTime: e.target.value})}
+                    className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl p-4 pl-12 text-sm font-bold text-slate-900 outline-none focus:border-sky-600/20 focus:bg-white transition-all" 
+                  />
+                </div>
               </div>
-              <MoveRight className="w-4 h-4 text-slate-300" />
-              <div className="relative flex-1">
-                <input 
-                  type="time" 
-                  value={formData.arrivalTime}
-                  onChange={(e) => setFormData({...formData, arrivalTime: e.target.value})}
-                  className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl p-4 text-sm font-bold text-slate-900 outline-none focus:border-sky-600/20 focus:bg-white transition-all" 
-                />
-              </div>
+              <p className="text-[11px] text-slate-400 font-medium px-1 italic">* 도착 시간은 입항 후 기록 가능합니다.</p>
             </div>
           </div>
         </div>
@@ -166,7 +193,7 @@ const OperationEntry: React.FC<OperationEntryProps> = ({
               <select 
                 value={formData.chiefEngineer}
                 onChange={(e) => setFormData({...formData, chiefEngineer: e.target.value})}
-                className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl p-4 text-sm font-bold text-slate-900 outline-none focus:border-sky-600/20 focus:bg-white transition-all appearance-none cursor-pointer"
+                className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl p-4 text-sm font-bold text-slate-900 outline-none focus:border-sky-600/20 focus:bg-white appearance-none cursor-pointer"
               >
                 <option value="">기관장을 선택하세요</option>
                 {users.filter(u => u.role === UserRole.CHIEF_ENGINEER).map(u => (

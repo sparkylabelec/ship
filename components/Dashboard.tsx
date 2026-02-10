@@ -4,7 +4,7 @@ import { Ship, User, OperationLog } from '../types';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 import { 
   Anchor, Users, AlertTriangle, Ship as ShipIcon, Clock, Navigation, 
-  Activity, X, FileText, CheckCircle2, Fuel 
+  Activity, X, FileText, CheckCircle2, Fuel, MapPinned
 } from 'lucide-react';
 
 interface DashboardProps {
@@ -21,27 +21,13 @@ const Dashboard: React.FC<DashboardProps> = ({ ships, users, logs }) => {
   const currentTimeStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
   const todayStr = now.toISOString().split('T')[0];
 
-  /**
-   * 운항 중 선박 판단 조건:
-   * 1. 임시 저장 상태 (isDraft: true)
-   * 2. 출발 시간이 현재 시간보다 빠름 (departureTime <= currentTime)
-   * 3. 도착 시간이 아직 입력되지 않음 (!arrivalTime)
-   */
   const operatingLogs = useMemo(() => {
     return logs.filter(log => {
-      // 1. 임시저장 항목인지 확인
       if (!log.isDraft) return false;
-      
       const logDate = log.createdAt.split('T')[0];
-      // 오늘 날짜인지 확인 (실시간 현황이므로)
       if (logDate !== todayStr) return false;
-
-      // 2. 출발시간이 지났는지 확인
       const hasDeparted = log.departureTime && log.departureTime <= currentTimeStr;
-      
-      // 3. 도착시간이 입력되지 않았는지 확인 (빈 문자열이거나 null인 경우)
       const arrivalNotSet = !log.arrivalTime || log.arrivalTime.trim() === '';
-
       return hasDeparted && arrivalNotSet;
     });
   }, [logs, currentTimeStr, todayStr]);
@@ -101,7 +87,6 @@ const Dashboard: React.FC<DashboardProps> = ({ ships, users, logs }) => {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Real-time Operation Status List */}
         <div className="lg:col-span-1 bg-white border border-slate-200 rounded-[32px] p-8 shadow-sm space-y-6">
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-2">
@@ -122,11 +107,14 @@ const Dashboard: React.FC<DashboardProps> = ({ ships, users, logs }) => {
                   className="w-full text-left group p-4 bg-slate-50 rounded-2xl border border-slate-100 hover:border-sky-300 hover:bg-white transition-all duration-300 shadow-sm hover:shadow-md active:scale-[0.98]"
                 >
                   <div className="flex justify-between items-start mb-3">
-                    <div className="flex items-center gap-2">
-                      <div className="w-8 h-8 rounded-lg bg-sky-100 flex items-center justify-center text-sky-600 group-hover:bg-sky-600 group-hover:text-white transition-colors">
-                        <ShipIcon className="w-4 h-4" />
+                    <div className="flex flex-col gap-0.5">
+                      <div className="flex items-center gap-2">
+                        <div className="w-8 h-8 rounded-lg bg-sky-100 flex items-center justify-center text-sky-600 group-hover:bg-sky-600 group-hover:text-white transition-colors">
+                          <ShipIcon className="w-4 h-4" />
+                        </div>
+                        <span className="font-black text-slate-800 group-hover:text-sky-700">{log.shipName}</span>
                       </div>
-                      <span className="font-black text-slate-800 group-hover:text-sky-700">{log.shipName}</span>
+                      <span className="text-[10px] font-bold text-slate-400 ml-10">{log.operationCourse}</span>
                     </div>
                     <div className="flex items-center gap-1.5 text-[10px] font-bold text-emerald-600">
                       <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping" />
@@ -136,11 +124,11 @@ const Dashboard: React.FC<DashboardProps> = ({ ships, users, logs }) => {
                   <div className="grid grid-cols-2 gap-4 text-xs font-bold text-slate-500">
                     <div className="flex items-center gap-1.5">
                       <Users className="w-3.5 h-3.5 text-slate-400" />
-                      {log.captainName} 선장
+                      {log.captainName}
                     </div>
                     <div className="flex items-center gap-1.5 justify-end">
                       <Clock className="w-3.5 h-3.5 text-slate-400" />
-                      {log.departureTime} 출항
+                      {log.departureTime}
                     </div>
                   </div>
                 </button>
@@ -154,7 +142,6 @@ const Dashboard: React.FC<DashboardProps> = ({ ships, users, logs }) => {
           </div>
         </div>
 
-        {/* Capacity Chart */}
         <div className="lg:col-span-2 bg-white border border-slate-200 rounded-[32px] p-8 shadow-sm">
           <div className="flex justify-between items-center mb-8">
             <h3 className="text-xl font-black text-slate-900">선박별 인원 배정률</h3>
@@ -174,21 +161,9 @@ const Dashboard: React.FC<DashboardProps> = ({ ships, users, logs }) => {
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                <XAxis 
-                  dataKey="name" 
-                  axisLine={false} 
-                  tickLine={false} 
-                  tick={{ fill: '#94a3b8', fontSize: 12, fontWeight: 700 }} 
-                />
-                <YAxis 
-                  axisLine={false} 
-                  tickLine={false} 
-                  tick={{ fill: '#94a3b8', fontSize: 12, fontWeight: 700 }} 
-                />
-                <Tooltip 
-                  cursor={{ fill: '#f8fafc' }}
-                  contentStyle={{ borderRadius: '16px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)', padding: '12px' }}
-                />
+                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 12, fontWeight: 700 }} />
+                <YAxis axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 12, fontWeight: 700 }} />
+                <Tooltip cursor={{ fill: '#f8fafc' }} contentStyle={{ borderRadius: '16px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)', padding: '12px' }} />
                 <Bar dataKey="ratio" radius={[10, 10, 0, 0]} barSize={40}>
                   {chartData.map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={entry.ratio >= 90 ? '#f43f5e' : '#0ea5e9'} />
@@ -200,7 +175,6 @@ const Dashboard: React.FC<DashboardProps> = ({ ships, users, logs }) => {
         </div>
       </div>
 
-      {/* Operation Log Detail Modal */}
       {selectedLog && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
           <div className="bg-white w-full max-w-2xl rounded-3xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300 border border-slate-200">
@@ -211,19 +185,19 @@ const Dashboard: React.FC<DashboardProps> = ({ ships, users, logs }) => {
                 </div>
                 <div>
                   <h3 className="text-xl font-black text-slate-900">{selectedLog.shipName} 실시간 운항 정보</h3>
-                  <p className="text-xs text-slate-500">
-                    {new Date(selectedLog.createdAt).toLocaleDateString()} 운항 기록
-                  </p>
+                  <p className="text-xs text-slate-500">{new Date(selectedLog.createdAt).toLocaleDateString()} 운항 기록</p>
                 </div>
               </div>
-              <button 
-                onClick={() => setSelectedLog(null)} 
-                className="p-2 hover:bg-white rounded-full text-slate-400 hover:text-rose-500 transition-all"
-              >
-                <X className="w-6 h-6" />
-              </button>
+              <button onClick={() => setSelectedLog(null)} className="p-2 hover:bg-white rounded-full text-slate-400 hover:text-rose-500 transition-all"><X className="w-6 h-6" /></button>
             </div>
             <div className="p-8 space-y-6">
+               <div className="bg-sky-50 p-6 rounded-2xl border border-sky-100 flex items-center gap-4">
+                  <MapPinned className="w-8 h-8 text-sky-600" />
+                  <div>
+                    <p className="text-[10px] font-black text-sky-600 uppercase tracking-widest">운항 코스</p>
+                    <p className="text-xl font-black text-slate-900">{selectedLog.operationCourse || '-'}</p>
+                  </div>
+               </div>
                <div className="grid grid-cols-2 gap-6">
                   <div className="space-y-1">
                     <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">선장 / 기관장</p>
@@ -256,9 +230,7 @@ const Dashboard: React.FC<DashboardProps> = ({ ships, users, logs }) => {
                  <div className="flex flex-wrap gap-2">
                    {selectedLog.crewMembers.length > 0 ? (
                      selectedLog.crewMembers.map(crew => (
-                       <span key={crew} className="px-3 py-1 bg-white border border-slate-200 rounded-lg text-xs font-bold text-slate-600">
-                         {crew}
-                       </span>
+                       <span key={crew} className="px-3 py-1 bg-white border border-slate-200 rounded-lg text-xs font-bold text-slate-600">{crew}</span>
                      ))
                    ) : (
                      <span className="text-xs text-slate-400 font-medium italic">배정된 승무원 정보가 없습니다.</span>
@@ -273,12 +245,7 @@ const Dashboard: React.FC<DashboardProps> = ({ ships, users, logs }) => {
                </div>
             </div>
             <div className="p-6 bg-slate-50 border-t border-slate-100 flex justify-end">
-              <button 
-                onClick={() => setSelectedLog(null)} 
-                className="px-6 py-2 bg-white border border-slate-200 text-slate-600 rounded-xl text-sm font-bold hover:bg-slate-100 transition-colors shadow-sm"
-              >
-                닫기
-              </button>
+              <button onClick={() => setSelectedLog(null)} className="px-6 py-2 bg-white border border-slate-200 text-slate-600 rounded-xl text-sm font-bold hover:bg-slate-100 transition-colors shadow-sm">닫기</button>
             </div>
           </div>
         </div>

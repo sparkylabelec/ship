@@ -1,14 +1,14 @@
 
 import React, { useState, useEffect } from 'react';
-import Layout from './components/Layout.tsx';
-import Dashboard from './components/Dashboard.tsx';
-import UserManagement from './components/UserManagement.tsx';
-import ShipManagement from './components/ShipManagement.tsx';
-import OperationEntry from './components/OperationEntry.tsx';
-import OperationLogList from './components/OperationLogList.tsx';
-import TelegramSettings from './components/TelegramSettings.tsx';
-import { View, User, Ship, UserRole, OperationLog, TelegramConfig } from './types.ts';
-import { INITIAL_SHIPS, INITIAL_USERS, INITIAL_LOGS } from './constants.tsx';
+import Layout from './components/Layout';
+import Dashboard from './components/Dashboard';
+import UserManagement from './components/UserManagement';
+import ShipManagement from './components/ShipManagement';
+import OperationEntry from './components/OperationEntry';
+import OperationLogList from './components/OperationLogList';
+import TelegramSettings from './components/TelegramSettings';
+import { View, User, Ship, UserRole, OperationLog, TelegramConfig } from './types';
+import { INITIAL_SHIPS, INITIAL_USERS, INITIAL_LOGS } from './constants';
 import { Ship as ShipIcon, UserCircle, LogIn } from 'lucide-react';
 
 const App: React.FC = () => {
@@ -26,13 +26,18 @@ const App: React.FC = () => {
 
   useEffect(() => {
     // Load Logs
-    const savedLogs = localStorage.getItem('mms_logs');
-    if (savedLogs) setLogs(JSON.parse(savedLogs));
-    else setLogs(INITIAL_LOGS);
+    try {
+      const savedLogs = localStorage.getItem('mms_logs');
+      if (savedLogs) setLogs(JSON.parse(savedLogs));
+      else setLogs(INITIAL_LOGS);
 
-    // Load Telegram Config
-    const savedTele = localStorage.getItem('mms_telegram');
-    if (savedTele) setTelegramConfig(JSON.parse(savedTele));
+      // Load Telegram Config
+      const savedTele = localStorage.getItem('mms_telegram');
+      if (savedTele) setTelegramConfig(JSON.parse(savedTele));
+    } catch (e) {
+      console.error("Failed to load local storage data", e);
+      setLogs(INITIAL_LOGS);
+    }
   }, [currentView]);
 
   const handleUpdateUser = (updatedUser: User) => {
@@ -53,7 +58,6 @@ const App: React.FC = () => {
     localStorage.setItem('mms_telegram', JSON.stringify(config));
   };
 
-  // Log CRUD Handlers
   const handleDeleteLog = (id: string) => {
     const updatedLogs = logs.filter(l => l.id !== id);
     setLogs(updatedLogs);
@@ -74,16 +78,17 @@ const App: React.FC = () => {
               <ShipIcon className="w-10 h-10" />
             </div>
             <h1 className="text-3xl font-black text-slate-900 tracking-tight">나미나라 운항관리</h1>
-            <p className="mt-2 text-slate-500 font-medium">역할을 선택하여 시스템에 접속하십시오.</p>
+            <p className="mt-2 text-slate-500 font-medium">시스템에 접속하려면 사용자를 선택하세요.</p>
           </div>
 
-          <div className="grid grid-cols-1 gap-4">
-            {users.slice(0, 5).map((user) => (
+          <div className="grid grid-cols-1 gap-4 max-h-[60vh] overflow-y-auto p-2">
+            {users.map((user) => (
               <button
                 key={user.id}
                 onClick={() => {
                   setCurrentUser(user);
-                  setCurrentView(user.role === UserRole.CAPTAIN ? 'operation' : user.role === UserRole.CHIEF_ENGINEER ? 'operation' : 'dashboard');
+                  const defaultView = user.role === UserRole.CAPTAIN || user.role === UserRole.CHIEF_ENGINEER ? 'operation' : 'dashboard';
+                  setCurrentView(defaultView as View);
                 }}
                 className="group relative flex items-center gap-4 p-5 bg-white border border-slate-200 rounded-3xl text-left hover:border-sky-600 hover:shadow-lg transition-all active:scale-95"
               >

@@ -27,6 +27,7 @@ export interface Ship {
 export interface OperationLog {
   id: string;
   shipName: string;
+  operationCourse?: string; // 추가된 필드
   captainName: string;
   departureTime: string;
   arrivalTime: string;

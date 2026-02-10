@@ -6,10 +6,15 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Marine Resource & Crew Manager</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    // 전역 process 객체 정의 (Vercel/브라우저 환경 대응)
+    window.process = window.process || { env: {} };
+  </script>
 <script type="importmap">
 {
   "imports": {
     "react": "https://esm.sh/react@^19.2.4",
+    "react-dom": "https://esm.sh/react-dom@^19.2.4",
     "react-dom/": "https://esm.sh/react-dom@^19.2.4/",
     "react/": "https://esm.sh/react@^19.2.4/",
     "lucide-react": "https://esm.sh/lucide-react@^0.563.0",
@@ -22,6 +27,7 @@
 </head>
 <body class="bg-slate-50 text-slate-900 font-sans">
   <div id="root"></div>
+  <!-- 배포 환경에서는 빌드 도구가 이를 처리하겠지만, 런타임 해석을 위해 경로 유지 -->
   <script type="module" src="./index.tsx"></script>
 </body>
 </html>

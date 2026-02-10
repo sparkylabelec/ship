@@ -23,6 +23,7 @@ export const exportLogsToExcel = (logs: OperationLog[]) => {
     '번호': index + 1,
     '운항날짜': new Date(log.createdAt).toLocaleDateString(),
     '선박명': log.shipName,
+    '운항코스': log.operationCourse || '-', // 추가됨
     '선장': log.captainName,
     '기관장': log.chiefEngineer,
     '승무원': log.crewMembers.join(', '),
@@ -44,6 +45,7 @@ export const exportLogsToExcel = (logs: OperationLog[]) => {
     { wch: 5 },  // 번호
     { wch: 12 }, // 운항날짜
     { wch: 15 }, // 선박명
+    { wch: 20 }, // 운항코스 (넓힘)
     { wch: 10 }, // 선장
     { wch: 10 }, // 기관장
     { wch: 20 }, // 승무원
@@ -61,9 +63,6 @@ export const exportLogsToExcel = (logs: OperationLog[]) => {
   // 4. 워크북 생성 및 시트 추가
   const workbook = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(workbook, worksheet, "운항일지 리포트");
-
-  // 5. 시트 최상단 제목 추가 (필요시 수동 조작 혹은 주석)
-  // 참고: SheetJS 무료 버전은 셀 병합 및 스타일링에 제한이 있으나, 기본 데이터 추출에 최적화됨
 
   // 6. 파일 다운로드
   XLSX.writeFile(workbook, filename);
